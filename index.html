@@ -43,12 +43,18 @@
     .btn-primary{background:linear-gradient(135deg, var(--pink), var(--orange));color:white}
     .btn-secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
     .btn-danger{background:rgba(255,91,110,.18);color:#ffd2d8;border:1px solid rgba(255,91,110,.24)}
+    .btn-edit{background:rgba(57,213,255,.16);color:#b6f1ff;border:1px solid rgba(57,213,255,.2)}
     .stack{display:grid;gap:12px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:8px}label{color:var(--muted);font-size:13px;font-weight:700}
     select,input{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:rgba(10,5,12,.44);color:var(--text)}
     .log-list,.penalty-list,.award-list{display:grid;gap:10px;margin-top:8px}.entry,.penalty-item,.award-item{padding:14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--border)}
     .entry-top,.award-top{display:flex;justify-content:space-between;gap:10px;align-items:center}.entry small,.helper,.muted{color:var(--muted)}
     .warning{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(255,228,94,.12);border:1px solid rgba(255,228,94,.2);color:#fff4b8;font-size:14px}
     .footer-note{margin-top:22px;color:var(--faint);font-size:13px;text-align:center}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+    .editor{margin-top:14px;padding:14px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:none}
+    .editor.active{display:block}
+    .editor-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+    .editor-title{font-weight:800;font-size:16px}
+    .entry-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
     @media (max-width:980px){.hero-grid,.main,.mini-grid{grid-template-columns:1fr}}
     @media (max-width:720px){.players,.form-grid{grid-template-columns:1fr}h1{font-size:72px}.wrap{padding:14px}.hero,.panel{padding:16px}.meta{grid-template-columns:repeat(3,minmax(0,1fr))}}
   </style>
@@ -92,6 +98,24 @@
             <button class="btn-secondary" id="seedDemoBtn">Carica demo</button>
             <button class="btn-danger" id="resetBtn">Resetta tutto</button>
           </div>
+
+          <div class="editor" id="eventEditor">
+            <div class="editor-head">
+              <div class="editor-title">Modifica evento</div>
+              <button class="btn-secondary" id="cancelEditBtn" type="button">Annulla</button>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label for="editPlayer">Partecipante</label><select id="editPlayer"></select></div>
+              <div class="field"><label for="editType">Tipo evento</label><select id="editType"><option value="kiss">Limone</option><option value="prelim">Preliminari bocchino</option><option value="sex">Scopata</option></select></div>
+              <div class="field"><label for="editBeauty">Bellezza tipa</label><select id="editBeauty"></select></div>
+              <div class="field"><label for="editGirl">Codice tipa</label><input id="editGirl" type="text" /></div>
+              <div class="field"><label for="editDay">Giorno</label><select id="editDay"></select></div>
+              <div class="field"><label for="editTime">Orario / luogo</label><input id="editTime" type="text" /></div>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" id="saveEditBtn" type="button">Salva modifiche</button>
+            </div>
+          </div>
         </div>
 
         <div class="mini-grid">
@@ -119,19 +143,51 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'mykonos-challenge-tracker-v1';
+    const STORAGE_KEY = 'mykonos-challenge-tracker-v2';
 
     const defaultState = {
       players: [
         { id: 1, name: "Lorenzo" },
         { id: 2, name: "Matteo" },
         { id: 3, name: "Marco" },
-        { id: 4, name: "Nicol" },
+        { id: 4, name: "Nicolo" },
         { id: 5, name: "Dauda" },
         { id: 6, name: "Giulio" }
       ],
       events: []
     };
+
+    const levels = {
+      0: { label: "Gay assoluto", penalty: "Bottiglia da 100" },
+      1: { label: "Mezzo Gay", penalty: "Un drink" },
+      2: { label: "Etero", penalty: "Una birra" },
+      3: { label: "Campione", penalty: "Uno shot" },
+      4: { label: "Re Supremo", penalty: "Niente" }
+    };
+
+    let state = loadState();
+    let editingEventId = null;
+
+    const playerSelect = document.getElementById("playerSelect");
+    const eventType = document.getElementById("eventType");
+    const girlLabel = document.getElementById("girlLabel");
+    const eventDay = document.getElementById("eventDay");
+    const eventTime = document.getElementById("eventTime");
+    const girlBeauty = document.getElementById("girlBeauty");
+    const playersGrid = document.getElementById("playersGrid");
+    const totalEvents = document.getElementById("totalEvents");
+    const leaderNow = document.getElementById("leaderNow");
+    const logList = document.getElementById("logList");
+    const penaltyList = document.getElementById("penaltyList");
+    const awardList = document.getElementById("awardList");
+
+    const eventEditor = document.getElementById("eventEditor");
+    const editPlayer = document.getElementById("editPlayer");
+    const editType = document.getElementById("editType");
+    const editBeauty = document.getElementById("editBeauty");
+    const editGirl = document.getElementById("editGirl");
+    const editDay = document.getElementById("editDay");
+    const editTime = document.getElementById("editTime");
 
     function loadState() {
       try {
@@ -154,57 +210,58 @@
       }));
     }
 
-    const levels = {
-      0: { label: "Gay assoluto", penalty: "Bottiglia da 100" },
-      1: { label: "Mezzo Gay", penalty: "Un drink" },
-      2: { label: "Etero", penalty: "Una birra" },
-      3: { label: "Campione", penalty: "Uno shot" },
-      4: { label: "Re Supremo", penalty: "Niente" }
-    };
-
-    const state = loadState();
-
-    const playerSelect = document.getElementById("playerSelect");
-    const eventType = document.getElementById("eventType");
-    const girlLabel = document.getElementById("girlLabel");
-    const eventDay = document.getElementById("eventDay");
-    const eventTime = document.getElementById("eventTime");
-    const girlBeauty = document.getElementById("girlBeauty");
-    const playersGrid = document.getElementById("playersGrid");
-    const totalEvents = document.getElementById("totalEvents");
-    const leaderNow = document.getElementById("leaderNow");
-    const logList = document.getElementById("logList");
-    const penaltyList = document.getElementById("penaltyList");
-    const awardList = document.getElementById("awardList");
-
-    function init() {
+    function initSelects() {
       state.players.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name;
-        playerSelect.appendChild(opt);
+        const opt1 = document.createElement("option");
+        opt1.value = p.id;
+        opt1.textContent = p.name;
+        playerSelect.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = p.id;
+        opt2.textContent = p.name;
+        editPlayer.appendChild(opt2);
       });
 
       for (let vote = 0; vote <= 10; vote += 0.5) {
-        const opt = document.createElement("option");
-        opt.value = vote.toFixed(1);
-        opt.textContent = Number.isInteger(vote) ? String(vote) : vote.toFixed(1);
-        girlBeauty.appendChild(opt);
+        const value = vote.toFixed(1);
+        const opt1 = document.createElement("option");
+        opt1.value = value;
+        opt1.textContent = Number.isInteger(vote) ? String(vote) : value;
+        girlBeauty.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = value;
+        opt2.textContent = Number.isInteger(vote) ? String(vote) : value;
+        editBeauty.appendChild(opt2);
       }
 
       ["16/07", "17/07", "18/07", "19/07", "20/07", "21/07", "22/07", "23/07"].forEach(day => {
-        const opt = document.createElement("option");
-        opt.value = day;
-        opt.textContent = day;
-        eventDay.appendChild(opt);
-      });
+        const opt1 = document.createElement("option");
+        opt1.value = day;
+        opt1.textContent = day;
+        eventDay.appendChild(opt1);
 
+        const opt2 = document.createElement("option");
+        opt2.value = day;
+        opt2.textContent = day;
+        editDay.appendChild(opt2);
+      });
+    }
+
+    function init() {
+      initSelects();
       eventType.addEventListener("change", syncBeautyField);
+      editType.addEventListener("change", syncEditBeautyField);
+
       document.getElementById("addEventBtn").addEventListener("click", addEvent);
       document.getElementById("seedDemoBtn").addEventListener("click", seedDemo);
       document.getElementById("resetBtn").addEventListener("click", resetAll);
+      document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
+      document.getElementById("saveEditBtn").addEventListener("click", saveEdit);
 
       syncBeautyField();
+      syncEditBeautyField();
       render();
     }
 
@@ -249,6 +306,19 @@
       if (!isSex) girlBeauty.value = "6.0";
     }
 
+    function syncEditBeautyField() {
+      const isSex = editType.value === "sex";
+      editBeauty.disabled = !isSex;
+      editBeauty.style.opacity = isSex ? 1 : 0.55;
+      if (!isSex) editBeauty.value = "6.0";
+    }
+
+    function computePoints(playerId, type, beauty, eventIdToIgnore = null) {
+      if (type !== "sex") return 0;
+      const previousSexCount = state.events.filter(e => e.playerId === playerId && e.type === "sex" && e.id !== eventIdToIgnore).length;
+      return previousSexCount === 0 ? 1 : (beauty <= 4 ? 0.5 : 1);
+    }
+
     function addEvent() {
       const playerId = Number(playerSelect.value);
       const type = eventType.value;
@@ -256,10 +326,7 @@
       const day = eventDay.value;
       const note = eventTime.value.trim() || "Orario non segnato";
       const beauty = type === "sex" ? Number(girlBeauty.value) : null;
-      const previousSexCount = state.events.filter(e => e.playerId === playerId && e.type === "sex").length;
-
-      let points = 0;
-      if (type === "sex") points = previousSexCount === 0 ? 1 : (beauty <= 4 ? 0.5 : 1);
+      const points = computePoints(playerId, type, beauty);
 
       state.events.unshift({
         id: crypto.randomUUID(),
@@ -277,8 +344,8 @@
       eventDay.value = "16/07";
       eventTime.value = "";
       girlBeauty.value = "6.0";
-      syncBeautyField();
       saveState();
+      syncBeautyField();
       render();
     }
 
@@ -296,7 +363,6 @@
       ].sort((a, b) => b.createdAt - a.createdAt);
 
       saveState();
-      syncBeautyField();
       render();
     }
 
@@ -304,6 +370,65 @@
       if (!confirm("Sicuro di voler resettare tutta la challenge?")) return;
       state.events = [];
       saveState();
+      render();
+    }
+
+    function startEdit(eventId) {
+      const ev = state.events.find(e => e.id === eventId);
+      if (!ev) return;
+
+      editingEventId = eventId;
+      editPlayer.value = String(ev.playerId);
+      editType.value = ev.type;
+      editGirl.value = ev.girl || "";
+      editDay.value = ev.day || "16/07";
+      editTime.value = ev.note || "";
+      editBeauty.value = ev.beauty !== null && ev.beauty !== undefined ? String(ev.beauty) : "6.0";
+      syncEditBeautyField();
+      eventEditor.classList.add("active");
+      eventEditor.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    function cancelEdit() {
+      editingEventId = null;
+      eventEditor.classList.remove("active");
+    }
+
+    function saveEdit() {
+      if (!editingEventId) return;
+
+      const idx = state.events.findIndex(e => e.id === editingEventId);
+      if (idx === -1) return;
+
+      const playerId = Number(editPlayer.value);
+      const type = editType.value;
+      const girl = editGirl.value.trim() || "Tipa anonima";
+      const day = editDay.value;
+      const note = editTime.value.trim() || "Orario non segnato";
+      const beauty = type === "sex" ? Number(editBeauty.value) : null;
+      const points = computePoints(playerId, type, beauty, editingEventId);
+
+      state.events[idx] = {
+        ...state.events[idx],
+        playerId,
+        type,
+        girl,
+        day,
+        note,
+        beauty,
+        points
+      };
+
+      saveState();
+      cancelEdit();
+      render();
+    }
+
+    function deleteEvent(eventId) {
+      if (!confirm("Vuoi eliminare questo evento?")) return;
+      state.events = state.events.filter(e => e.id !== eventId);
+      saveState();
+      if (editingEventId === eventId) cancelEdit();
       render();
     }
 
@@ -358,8 +483,20 @@
             <small>${new Date(e.createdAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</small>
           </div>
           <div class="muted">${e.day} · ${e.girl}${e.beauty !== null ? ` · Bellezza ${e.beauty}` : ""} · ${e.note}</div>
+          <div class="entry-actions">
+            <button class="btn-edit" data-edit="${e.id}">Modifica</button>
+            <button class="btn-danger" data-delete="${e.id}">Elimina</button>
+          </div>
         `;
         logList.appendChild(el);
+      });
+
+      logList.querySelectorAll("[data-edit]").forEach(btn => {
+        btn.addEventListener("click", () => startEdit(btn.getAttribute("data-edit")));
+      });
+
+      logList.querySelectorAll("[data-delete]").forEach(btn => {
+        btn.addEventListener("click", () => deleteEvent(btn.getAttribute("data-delete")));
       });
     }
 
