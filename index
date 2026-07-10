@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mykonos Challenge Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #120714;
+      --surface: #1f0d24;
+      --surface-2: #2d1034;
+      --card: rgba(255,255,255,0.06);
+      --text: #fff7f3;
+      --muted: #d2b6ca;
+      --faint: #9e7f9c;
+      --pink: #ff2ea6;
+      --orange: #ff8a00;
+      --yellow: #ffe45e;
+      --green: #70ff86;
+      --cyan: #39d5ff;
+      --red: #ff5b6e;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 16px 40px rgba(0,0,0,0.35);
+      --radius: 20px;
+      --radius-sm: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255,46,166,0.24), transparent 26%),
+        radial-gradient(circle at top right, rgba(57,213,255,0.22), transparent 24%),
+        radial-gradient(circle at bottom center, rgba(255,138,0,0.18), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 20px; }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,46,166,0.18), rgba(255,138,0,0.16));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto -30px -30px auto;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(255,228,94,0.35), transparent 60%);
+      filter: blur(10px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: var(--yellow);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1; }
+
+    h1 {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(54px, 12vw, 112px);
+      letter-spacing: 0.02em;
+      margin-top: 12px;
+      text-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    }
+
+    .subtitle {
+      color: var(--yellow);
+      max-width: 780px;
+      font-size: 18px;
+      margin-top: 10px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .hero-grid, .grid { display: grid; gap: 18px; }
+    .hero-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 22px; }
+
+    .stat, .panel {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .stat { padding: 16px; }
+
+    .label {
+      color: var(--faint);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+    }
+
+    .big { margin-top: 8px; font-size: 28px; font-weight: 800; }
+
+    .section-title {
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 38px;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+
+    .main {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel { padding: 20px; }
+
+    .players {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .player-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .player-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .player-name { font-size: 20px; font-weight: 800; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .pill.level-0 { background: rgba(255,91,110,0.18); color: #ff93a0; }
+    .pill.level-1 { background: rgba(255,138,0,0.18); color: #ffc277; }
+    .pill.level-2 { background: rgba(255,228,94,0.18); color: #fff0a1; }
+    .pill.level-3 { background: rgba(57,213,255,0.16); color: #9be9ff; }
+    .pill.level-4 { background: rgba(112,255,134,0.16); color: #afffbd; }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .meta-box {
+      background: rgba(0,0,0,0.16);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .meta-box b {
+      display: block;
+      font-size: 18px;
+      margin-top: 6px;
+    }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button, select, input { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.16s ease, opacity 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink), var(--orange));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: rgba(255,91,110,0.18);
+      color: #ffd2d8;
+      border: 1px solid rgba(255,91,110,0.24);
+    }
+
+    .stack { display: grid; gap: 12px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { display: grid; gap: 8px; }
+
+    label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(10,5,12,0.44);
+      color: var(--text);
+    }
+
+    .log-list, .penalty-list, .award-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .entry, .penalty-item, .award-item {
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+    }
+
+    .entry-top, .award-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .entry small, .helper, .muted { color: var(--muted); }
+
+    .warning {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,228,94,0.12);
+      border: 1px solid rgba(255,228,94,0.2);
+      color: #fff4b8;
+      font-size: 14px;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      color: var(--faint);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid, .main, .mini-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .players, .form-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 72px; }
+      .wrap { padding: 14px; }
+      .hero, .panel { padding: 16px; }
+      .meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Mykonos Challenge Mode On</div>
+      <h1>Challenge MYK</h1>
+      <p class="subtitle">Chi molla la presa offre da bere. Chi domina si prende Mykonos.</p>
+
+      <div class="hero-grid">
+        <div class="stat"><div class="label">Periodo</div><div class="big">16/07 - 23/07</div></div>
+        <div class="stat"><div class="label">Partecipanti</div><div class="big" id="totalPlayers">6</div></div>
+        <div class="stat"><div class="label">Scopate dei bomber</div><div class="big" id="totalEvents">0</div></div>
+        <div class="stat"><div class="label">Leader attuale</div><div class="big" id="leaderNow">Nessuno</div></div>
+      </div>
+    </section>
+
+    <section class="main">
+      <div class="panel">
+        <div class="section-title">Classifica live</div>
+        <div class="players" id="playersGrid"></div>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <div class="section-title">Registra evento</div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="playerSelect">Partecipante</label>
+              <select id="playerSelect"></select>
+            </div>
+            <div class="field">
+              <label for="eventType">Tipo evento</label>
+              <select id="eventType">
+                <option value="kiss">Limone</option>
+                <option value="prelim">Preliminari bocchino</option>
+                <option value="sex">Scopata</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="girlBeauty">Bellezza tipa</label>
+              <select id="girlBeauty"></select>
+            </div>
+            <div class="field">
+              <label for="girlLabel">Codice tipa</label>
+              <input id="girlLabel" type="text" placeholder="Es. Tipa 3" />
+            </div>
+            <div class="field">
+              <label for="eventDay">Giorno</label>
+              <select id="eventDay"></select>
+            </div>
+            <div class="field">
+              <label for="eventTime">Orario / luogo</label>
+              <input id="eventTime" type="text" placeholder="Es. 02:40 al Tropicana" />
+            </div>
+          </div>
+
+          <div class="warning">
+            Limone e preliminari valgono sempre 0 punti: servono solo a salire nei livelli intermedi. Per la scopata il punteggio si calcola da solo: prima scopata sempre 1 punto, dalla seconda in poi vale 0.5 se la bellezza è 4 o meno, altrimenti vale 1 punto.
+          </div>
+
+          <div class="actions">
+            <button class="btn-primary" id="addEventBtn">Aggiungi evento</button>
+            <button class="btn-secondary" id="seedDemoBtn">Carica demo</button>
+            <button class="btn-danger" id="resetBtn">Resetta tutto</button>
+          </div>
+        </div>
+
+        <div class="mini-grid">
+          <div class="panel">
+            <div class="section-title">Timeline</div>
+            <div class="helper">Gli eventi più recenti appaiono qui sotto.</div>
+            <div class="log-list" id="logList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="section-title">Pegni automatici</div>
+            <div class="helper">Stato attuale dei pegni correnti, partecipante per partecipante.</div>
+            <div class="penalty-list" id="penaltyList"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">Premi e malus</div>
+          <div class="award-list" id="awardList"></div>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Nota: questo prototipo salva i dati solo nella pagina aperta. Per usarlo davvero in gruppo conviene poi aggiungere export/import o una versione condivisa online.
+    </p>
+  </div>
+
+  <script>
+    const state = {
+      players: [
+        { id: 1, name: "Lorenzo" },
+        { id: 2, name: "Matteo" },
+        { id: 3, name: "Marco" },
+        { id: 4, name: "Nicol" },
+        { id: 5, name: "Dauda" },
+        { id: 6, name: "Giulio" }
+      ],
+      events: []
+    };
+
+    const levels = {
+      0: { label: "Gay assoluto", penalty: "Bottiglia da 100" },
+      1: { label: "Mezzo Gay", penalty: "Un drink" },
+      2: { label: "Etero", penalty: "Una birra" },
+      3: { label: "Campione", penalty: "Uno shot" },
+      4: { label: "Re Supremo", penalty: "Niente" }
+    };
+
+    const playerSelect = document.getElementById("playerSelect");
+    const eventType = document.getElementById("eventType");
+    const girlLabel = document.getElementById("girlLabel");
+    const eventDay = document.getElementById("eventDay");
+    const eventTime = document.getElementById("eventTime");
+    const girlBeauty = document.getElementById("girlBeauty");
+    const playersGrid = document.getElementById("playersGrid");
+    const totalEvents = document.getElementById("totalEvents");
+    const leaderNow = document.getElementById("leaderNow");
+    const logList = document.getElementById("logList");
+    const penaltyList = document.getElementById("penaltyList");
+    const awardList = document.getElementById("awardList");
+
+    function init() {
+      state.players.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        playerSelect.appendChild(opt);
+      });
+
+      for (let vote = 0; vote <= 10; vote += 0.5) {
+        const opt = document.createElement("option");
+        opt.value = vote.toFixed(1);
+        opt.textContent = Number.isInteger(vote) ? String(vote) : vote.toFixed(1);
+        girlBeauty.appendChild(opt);
+      }
+
+      ["16/07", "17/07", "18/07", "19/07", "20/07", "21/07", "22/07", "23/07"].forEach(day => {
+        const opt = document.createElement("option");
+        opt.value = day;
+        opt.textContent = day;
+        eventDay.appendChild(opt);
+      });
+
+      eventType.addEventListener("change", syncBeautyField);
+      document.getElementById("addEventBtn").addEventListener("click", addEvent);
+      document.getElementById("seedDemoBtn").addEventListener("click", seedDemo);
+      document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+      syncBeautyField();
+      render();
+    }
+
+    function getStats(playerId) {
+      const events = state.events.filter(e => e.playerId === playerId);
+      const hasKiss = events.some(e => e.type === "kiss");
+      const hasPrelim = events.some(e => e.type === "prelim");
+      const sexEvents = events.filter(e => e.type === "sex");
+      const sexPoints = sexEvents.reduce((sum, e) => sum + e.points, 0);
+
+      let level = 0;
+      if (hasKiss) level = 1;
+      if (hasPrelim) level = 2;
+      if (sexPoints >= 1) level = 3;
+      if (sexPoints >= 2) level = 4;
+
+      return {
+        totalEvents: events.length,
+        hasKiss,
+        hasPrelim,
+        sexCount: sexEvents.length,
+        sexPoints,
+        level
+      };
+    }
+
+    function getLeaderboard() {
+      return state.players
+        .map(p => ({ ...p, stats: getStats(p.id) }))
+        .sort((a, b) =>
+          b.stats.level - a.stats.level ||
+          b.stats.sexPoints - a.stats.sexPoints ||
+          b.stats.totalEvents - a.stats.totalEvents ||
+          a.name.localeCompare(b.name)
+        );
+    }
+
+    function syncBeautyField() {
+      const isSex = eventType.value === "sex";
+      girlBeauty.disabled = !isSex;
+      girlBeauty.style.opacity = isSex ? 1 : 0.55;
+      if (!isSex) girlBeauty.value = "6.0";
+    }
+
+    function addEvent() {
+      const playerId = Number(playerSelect.value);
+      const type = eventType.value;
+      const girl = girlLabel.value.trim() || "Tipa anonima";
+      const day = eventDay.value;
+      const note = eventTime.value.trim() || "Orario non segnato";
+      const beauty = type === "sex" ? Number(girlBeauty.value) : null;
+      const previousSexCount = state.events.filter(e => e.playerId === playerId && e.type === "sex").length;
+
+      let points = 0;
+      if (type === "sex") points = previousSexCount === 0 ? 1 : (beauty <= 4 ? 0.5 : 1);
+
+      state.events.unshift({
+        id: crypto.randomUUID(),
+        playerId,
+        type,
+        girl,
+        day,
+        note,
+        beauty,
+        points,
+        createdAt: Date.now()
+      });
+
+      girlLabel.value = "";
+      eventDay.value = "16/07";
+      eventTime.value = "";
+      girlBeauty.value = "6.0";
+      syncBeautyField();
+      render();
+    }
+
+    function seedDemo() {
+      if (state.events.length) return;
+      const now = Date.now();
+
+      state.events = [
+        { id: crypto.randomUUID(), playerId: 2, type: "kiss", girl: "Tipa 1", day: "16/07", note: "Sunset bar", beauty: 7, points: 0, createdAt: now - 600000 },
+        { id: crypto.randomUUID(), playerId: 3, type: "prelim", girl: "Tipa 2", day: "17/07", note: "Dopo il beach club", beauty: 6.5, points: 0, createdAt: now - 500000 },
+        { id: crypto.randomUUID(), playerId: 1, type: "sex", girl: "Tipa 3", day: "18/07", note: "02:15 rientro villa", beauty: 3.5, points: 1, createdAt: now - 400000 },
+        { id: crypto.randomUUID(), playerId: 1, type: "sex", girl: "Tipa 4", day: "19/07", note: "Notte leggendaria", beauty: 8.5, points: 1, createdAt: now - 300000 },
+        { id: crypto.randomUUID(), playerId: 5, type: "kiss", girl: "Tipa 5", day: "20/07", note: "Scaletta locale", beauty: 5, points: 0, createdAt: now - 200000 },
+        { id: crypto.randomUUID(), playerId: 4, type: "sex", girl: "Tipa 6", day: "21/07", note: "After improvvisato", beauty: 4, points: 1, createdAt: now - 100000 }
+      ].sort((a, b) => b.createdAt - a.createdAt);
+
+      syncBeautyField();
+      render();
+    }
+
+    function resetAll() {
+      if (!confirm("Sicuro di voler resettare tutta la challenge?")) return;
+      state.events = [];
+      render();
+    }
+
+    function renderPlayers(board) {
+      playersGrid.innerHTML = "";
+      board.forEach((p, index) => {
+        const lvl = levels[p.stats.level];
+        const card = document.createElement("div");
+        card.className = "player-card";
+        card.innerHTML = `
+          <div class="player-head">
+            <div>
+              <div class="label">#${index + 1} in classifica</div>
+              <div class="player-name">${p.name}</div>
+            </div>
+            <span class="pill level-${p.stats.level}">${lvl.label}</span>
+          </div>
+          <div class="meta">
+            <div class="meta-box"><span class="label">Punti</span><b>${p.stats.sexPoints}</b></div>
+            <div class="meta-box"><span class="label">Eventi</span><b>${p.stats.totalEvents}</b></div>
+            <div class="meta-box"><span class="label">Pegno</span><b style="font-size:13px;line-height:1.2">${lvl.penalty}</b></div>
+          </div>
+        `;
+        playersGrid.appendChild(card);
+      });
+    }
+
+    function renderLog() {
+      logList.innerHTML = "";
+      if (!state.events.length) {
+        logList.innerHTML = `
+          <div class="entry">
+            <b>Nessun evento ancora.</b>
+            <div class="muted">Inizia a loggare e fai partire il delirio.</div>
+          </div>
+        `;
+        return;
+      }
+
+      state.events.slice(0, 10).forEach(e => {
+        const player = state.players.find(p => p.id === e.playerId);
+        const typeLabel =
+          e.type === "kiss" ? "Limone 0 pt" :
+          e.type === "prelim" ? "Preliminari 0 pt" :
+          `Scopata ${e.points} pt`;
+
+        const el = document.createElement("div");
+        el.className = "entry";
+        el.innerHTML = `
+          <div class="entry-top">
+            <b>${player.name} · ${typeLabel}</b>
+            <small>${new Date(e.createdAt).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}</small>
+          </div>
+          <div class="muted">${e.day} · ${e.girl}${e.beauty !== null ? ` · Bellezza ${e.beauty}` : ""} · ${e.note}</div>
+        `;
+        logList.appendChild(el);
+      });
+    }
+
+    function renderPenalties(board) {
+      penaltyList.innerHTML = "";
+      board.forEach(p => {
+        const higher = board.filter(x => x.stats.level > p.stats.level);
+        const lvl = levels[p.stats.level];
+        const item = document.createElement("div");
+        item.className = "penalty-item";
+
+        item.innerHTML = !higher.length
+          ? `<b>${p.name}</b><div class="muted">Sta dominando la challenge e al momento non ha nessun pegno da pagare.</div>`
+          : `<b>${p.name} deve offrire ${lvl.penalty.toLowerCase()} a ${higher.map(h => h.name).join(", ")}</b><div class="muted">Livello attuale: ${lvl.label}.</div>`;
+
+        penaltyList.appendChild(item);
+      });
+    }
+
+    function renderAwards(board) {
+      awardList.innerHTML = "";
+      const sexEvents = state.events.filter(e => e.type === "sex");
+      const withSex = board.filter(p => p.stats.sexPoints > 0);
+      const firstSexEvent = sexEvents.length ? sexEvents.slice().sort((a, b) => a.createdAt - b.createdAt)[0] : null;
+      const bestBeautyEvent = sexEvents.length ? sexEvents.slice().sort((a, b) => b.beauty - a.beauty || a.createdAt - b.createdAt)[0] : null;
+      const worstBeautyEvent = sexEvents.length ? sexEvents.slice().sort((a, b) => a.beauty - b.beauty || a.createdAt - b.createdAt)[0] : null;
+
+      const firstWinner = firstSexEvent ? state.players.find(p => p.id === firstSexEvent.playerId) : null;
+      const bestWinner = bestBeautyEvent ? state.players.find(p => p.id === bestBeautyEvent.playerId) : null;
+      const worstWinner = worstBeautyEvent ? state.players.find(p => p.id === worstBeautyEvent.playerId) : null;
+
+      const awards = [
+        {
+          title: "Goleador",
+          text: !withSex.length
+            ? "Nessuno ha ancora segnato punti scopata."
+            : `${withSex.filter(p => p.stats.sexPoints === withSex[0].stats.sexPoints).map(p => p.name).join(", ")} sono in testa a pari merito con ${withSex[0].stats.sexPoints} punti.`
+        },
+        {
+          title: "Gareth Bale",
+          text: firstWinner
+            ? `${firstWinner.name} è stato il primo a segnare una scopata (${firstSexEvent.note}).`
+            : "Ancora nessun vincitore registrato."
+        },
+        {
+          title: "Sommelier",
+          text: bestWinner
+            ? `${bestWinner.name} è davanti con la tipa più bella registrata finora, voto ${bestBeautyEvent.beauty}.`
+            : "Ancora nessuna scopata registrata per assegnare il premio."
+        },
+        {
+          title: "Gollum",
+          text: worstWinner
+            ? `${worstWinner.name} ha al momento il malus con la tipa dal voto più basso, ${worstBeautyEvent.beauty}.`
+            : "Ancora nessuna scopata registrata per assegnare il malus."
+        }
+      ];
+
+      awards.forEach(a => {
+        const el = document.createElement("div");
+        el.className = "award-item";
+        el.innerHTML = `<div class="award-top"><b>${a.title}</b></div><div class="muted">${a.text}</div>`;
+        awardList.appendChild(el);
+      });
+    }
+
+    function render() {
+      const board = getLeaderboard();
+      document.getElementById("totalPlayers").textContent = state.players.length;
+      totalEvents.textContent = state.events.filter(e => e.type === "sex").length;
+
+      if (board.length) {
+        const topLevel = board[0].stats.level;
+        const topPoints = board[0].stats.sexPoints;
+        const leaders = board.filter(p => p.stats.level === topLevel && p.stats.sexPoints === topPoints).map(p => p.name);
+        leaderNow.textContent = leaders.length ? leaders.join(", ") : "Nessuno";
+      } else {
+        leaderNow.textContent = "Nessuno";
+      }
+
+      renderPlayers(board);
+      renderLog();
+      renderPenalties(board);
+      renderAwards(board);
+    }
+
+    init();
+  </script>
+</body>
+</html>
